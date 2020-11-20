@@ -14,27 +14,62 @@ hg19 = config["database"]["reference"]
 fq_path = config["core"]["sample_fold_path"]
 sample = config["samples"]
 project = config["core"]["project_path"]
+fastp = config["biosoft"]["fastp"]
 
 rule all_align_bwa:
     input:
         #expand("{sample}/{sample}.txt", sample = config["samples"])
-        expand(project + "/{sample}/{sample}.txt", sample = config["samples"])
+        #expand([project + "/{sample}/{sample}_1.fq", project + "/{sample}/{sample}_2.fq"], sample = config["samples"])
+        expand(project +"/{sample}/{sample}.bam", sample = config["samples"])
 
 
 def get_rawdata(wildcards):
     fq = config["samples"][wildcards.sample]
-    return [fq_path + f"/{fq}"]
+    l = [fq_path + f"/{i}" for i in fq]
+    return l
 
-rule bwa_test:
+rule remove_adaptor:
     input:
         #fq = lambda wildcards: config["samples"][wildcards.sample]
         fq = get_rawdata
     output:
-        out= "{project}/{sample}/{sample}.txt"
+        out_fq= ["{project}/{sample}/{sample}_1.fq", "{project}/{sample}/{sample}_2.fq"]
+    params:
+        threads = 16
+    resources:
+        mem_mb=300
+
     shell:
-        "echo {input.fq} > {output}"
+        "{fastp} -i {input.fq[0]} -I {input.fq[1]} -o {output.out_fq[0]} -O {output.out_fq[1]} -c -w {params.threads}"
 
 
+rule bwa_map:
+    input:
+        rules.remove_adaptor.output
+    output:
+        "{project}/{sample}/{sample}.sam.gz"
+    params:
+        threads = 64
 
+    shell:
+        "bwa mem -t {params.threads} -R \"@RG\\tID:DNA\\tLB:DNA\\tSM:5T\\tPL:ILLUMINA\" -M {hg19} {input} > {output}"
 
+rule sam_to_bam:
+    input:
+        rules.bwa_map.output
+    output:
+        temp("{project}/{sample}/{sample}.sam.tmp")
+    params:
+        threads = 64
+    shell:
+        "{samtools} view -@ {params.threads} -Sb {input} > {output}"
 
+rule sort_bam:
+    input:
+        rules.sam_to_bam.output
+    output:
+        "{project}/{sample}/{sample}.bam"
+    params:
+        threads = 64
+    shell:
+        "{samtools} sort -@ {{params.threads}} -T {wildcards.sample} -O bam {input} > {output}"
