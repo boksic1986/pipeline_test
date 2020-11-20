@@ -1,0 +1,40 @@
+# !DEPRECATED
+# Snakefile: mapping_bwa_mem.rules
+# rule for Snakemake
+# jiucheng
+# 2020-11-20
+
+import os
+
+configfile: "./configs/project_config.yaml"
+
+bwa = config["biosoft"]["bwa"]
+samtools = config["biosoft"]["samtools"]
+hg19 = config["database"]["reference"]
+fq_path = config["core"]["sample_fold_path"]
+sample = config["samples"]
+project = config["core"]["project_path"]
+
+rule all_align_bwa:
+    input:
+        #expand("{sample}/{sample}.txt", sample = config["samples"])
+        expand(project + "/{sample}/{sample}.txt", sample = config["samples"])
+
+
+def get_rawdata(wildcards):
+    fq = config["samples"][wildcards.sample]
+    return [fq_path + f"/{fq}"]
+
+rule bwa_test:
+    input:
+        #fq = lambda wildcards: config["samples"][wildcards.sample]
+        fq = get_rawdata
+    output:
+        out= "{project}/{sample}/{sample}.txt"
+    shell:
+        "echo {input.fq} > {output}"
+
+
+
+
+
