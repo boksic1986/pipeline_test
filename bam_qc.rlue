@@ -1,9 +1,0 @@
-# !DEPRECATED
-# Snakefile: mapping_bwa_mem.rules
-# rule for Snakemake
-# jiucheng
-# 2020-11-20
-
-
-configfile: "./configs/project_config.yaml"
-test
