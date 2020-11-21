@@ -23,7 +23,7 @@ rule all_align_bwa:
         expand(project +"/{sample}/{sample}.bam", sample = config["samples"])
 
 
-def get_rawdata(wildcards):
+def get_paired_end_fq(wildcards):
     fq = config["samples"][wildcards.sample]
     l = [fq_path + f"/{i}" for i in fq]
     return l
@@ -31,7 +31,7 @@ def get_rawdata(wildcards):
 rule remove_adaptor:
     input:
         #fq = lambda wildcards: config["samples"][wildcards.sample]
-        fq = get_rawdata
+        fq = get_paired_end_fq
     output:
         out_fq= ["{project}/{sample}/{sample}_1.fq", "{project}/{sample}/{sample}_2.fq"]
     params:
