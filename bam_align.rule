@@ -36,9 +36,6 @@ rule remove_adaptor:
         out_fq= ["{project}/{sample}/{sample}_1.fq", "{project}/{sample}/{sample}_2.fq"]
     params:
         threads = 16
-    resources:
-        mem_mb=300
-
     shell:
         "{fastp} -i {input.fq[0]} -I {input.fq[1]} -o {output.out_fq[0]} -O {output.out_fq[1]} -c -w {params.threads}"
 
@@ -50,9 +47,10 @@ rule bwa_map:
         "{project}/{sample}/{sample}.sam.gz"
     params:
         threads = 64
+        header = "@RG\tID:DNA\tLB:DNA\tSM:5T\tPL:ILLUMINA"
 
     shell:
-        "bwa mem -t {params.threads} -R \"@RG\\tID:DNA\\tLB:DNA\\tSM:5T\\tPL:ILLUMINA\" -M {hg19} {input} > {output}"
+        "bwa mem -t {params.threads} -R '{params.header}' -M {hg19} {input} | gzip > {output}"
 
 rule sam_to_bam:
     input:
@@ -73,3 +71,5 @@ rule sort_bam:
         threads = 64
     shell:
         "{samtools} sort -@ {{params.threads}} -T {wildcards.sample} -O bam {input} > {output}"
+
+

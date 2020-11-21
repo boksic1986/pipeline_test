@@ -1,0 +1,4 @@
+sample:
+  {sample}
+    - {fq1}
+    - {fq2}
