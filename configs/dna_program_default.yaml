@@ -1,0 +1,19 @@
+core:
+  project_path: "{project_path}"
+  sample_fold_path: "{sample_path}"
+
+biosoft:
+  fastp: /biosoftware/bin/fastp
+  bwa: /biosoftware/bin/bwa
+  samtools: /biosoftware/bin/samtools
+  gatk: /biosoftware/bin/gatk
+  bedtools: /biosoftware/bin/bedtools
+  ossutil: /biosoftware/bin/ossutil64
+  bcftools: /biosoftware/bin/bcftools
+  bcl2fastq: /biosoftware/bin/bcl2fastq
+
+
+database:
+  reference: /data/Database/index/hg19/hg19.fa
+
+sample:

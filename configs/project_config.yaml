@@ -1,23 +1,24 @@
 core:
   project_path: /home/jiucheng/data/sk_data
-#  sample_fold_path: /data/RawData/cffDNA/2020-11-03/X101SC20091348-Z01/20201104_HJVN5DSXY-X101SC20091348-Z01_Result/Rawdata
-  sample_fold_path: /data/RawData/WGS/2020-05-26-gDNA
+  sample_fold_path: /data/RawData/cffDNA/2020-11-03/X101SC20091348-Z01/20201104_HJVN5DSXY-X101SC20091348-Z01_Result/Rawdata
+#  sample_fold_path: /data/RawData/WGS/2020-05-26-gDNA
 
 biosoft:
   fastp: /biosoftware/bin/fastp
   bwa: /biosoftware/bin/bwa
   samtools: /biosoftware/bin/samtools
+  gatk: /biosoftware/bin/gatk
 
 database:
   reference: /data/Database/index/hg19/hg19.fa
 
 samples:
-#  F10:
-#    - 20201030-SNP-pool1-20201020-F10_L1_1.fq.gz
-#    - 20201030-SNP-pool1-20201020-F10_L1_2.fq.gz
-#  P11:
-#    - 20201030-SNP-pool1-20201020-F2_L1_1.fq.gz
-#    - 20201030-SNP-pool1-20201020-F2_L1_2.fq.gz
-    BABY:
-      - PB2019010202-baby_FDSW202387981-1r_1.fq.gz
-      - PB2019010202-baby_FDSW202387981-1r_2.fq.gz
+  F10:
+    - 20201030-SNP-pool1-20201020-F10_L1_1.fq.gz
+    - 20201030-SNP-pool1-20201020-F10_L1_2.fq.gz
+  P11:
+    - 20201030-SNP-pool1-20201020-F2_L1_1.fq.gz
+    - 20201030-SNP-pool1-20201020-F2_L1_2.fq.gz
+#    BABY:
+#      - PB2019010202-baby_FDSW202387981-1r_1.fq.gz
+#      - PB2019010202-baby_FDSW202387981-1r_2.fq.gz

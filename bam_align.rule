@@ -4,8 +4,6 @@
 # jiucheng
 # 2020-11-20
 
-import os
-
 configfile: "./configs/project_config.yaml"
 
 bwa = config["biosoft"]["bwa"]
@@ -15,12 +13,11 @@ fq_path = config["core"]["sample_fold_path"]
 sample = config["samples"]
 project = config["core"]["project_path"]
 fastp = config["biosoft"]["fastp"]
+gatk = config["biosoft"]["gatk"]
 
-rule all_align_bwa:
+rule all:
     input:
-        #expand("{sample}/{sample}.txt", sample = config["samples"])
-        #expand([project + "/{sample}/{sample}_1.fq", project + "/{sample}/{sample}_2.fq"], sample = config["samples"])
-        expand(project +"/{sample}/{sample}.bam", sample = config["samples"])
+        expand(project +"/{sample}/{sample}_mkdup.bam", sample = config["samples"])
 
 
 def get_paired_end_fq(wildcards):
@@ -30,14 +27,19 @@ def get_paired_end_fq(wildcards):
 
 rule remove_adaptor:
     input:
-        #fq = lambda wildcards: config["samples"][wildcards.sample]
         fq = get_paired_end_fq
     output:
-        out_fq= ["{project}/{sample}/{sample}_1.fq", "{project}/{sample}/{sample}_2.fq"]
+        out_fq1 = "{project}/{sample}/{sample}_trim_1.fq.gz",
+        out_fq2 = "{project}/{sample}/{sample}_trim_2.fq.gz"
     params:
-        threads = 16
+        threads = 16,
+        refix = "{project}/{sample}/{sample}"
+    message: "Executing bwa mem align on the following files {input}."
+    log:
+        "{project}/{sample}/{sample}.qc.log"
     shell:
-        "{fastp} -i {input.fq[0]} -I {input.fq[1]} -o {output.out_fq[0]} -O {output.out_fq[1]} -c -w {params.threads}"
+        """{fastp} -i {input.fq[0]} -I {input.fq[1]} -o {output.out_fq1} -O {output.out_fq2} -c -w {params.threads} \\
+            -h {params.refix}.html -j {params.refix}.json > {log} 2>&1"""
 
 
 rule bwa_map:
@@ -46,11 +48,12 @@ rule bwa_map:
     output:
         "{project}/{sample}/{sample}.sam.gz"
     params:
+        rg=r"@RG\tID:{sample}\tLB:DNA\tSM:{sample}\tPL:ILLUMINA",
         threads = 64
-        header = "@RG\tID:DNA\tLB:DNA\tSM:5T\tPL:ILLUMINA"
-
+    log:
+        "{project}/{sample}/{sample}.align.log"
     shell:
-        "bwa mem -t {params.threads} -R '{params.header}' -M {hg19} {input} | gzip > {output}"
+        "bwa mem -t {params.threads} -R '{params.rg}' -M {hg19} {input} 2>{log} | gzip > {output} "
 
 rule sam_to_bam:
     input:
@@ -70,6 +73,21 @@ rule sort_bam:
     params:
         threads = 64
     shell:
-        "{samtools} sort -@ {{params.threads}} -T {wildcards.sample} -O bam {input} > {output}"
+        "{samtools} sort -@ {params.threads} -T {wildcards.sample} -O bam {input} > {output}"
 
+rule mark_dup:
+    input:
+        rules.sort_bam.output
+    output:
+        "{project}/{sample}/{sample}_mkdup.bam"
+    log:
+        "{project}/{sample}/{sample}.mkdup.log",
+    shell:
+        """{gatk} MarkDuplicates \\
+                -I {input} \\
+                -O {output} \\
+                -M {project}/{wildcards.sample}/{wildcards.sample}_dup_metrics.txt > {log} 2>&1\\
+           && {gatk} BuildBamIndex \\
+                -I {output} > /dev/null 2>&1
+        """
 

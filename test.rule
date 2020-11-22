@@ -1,0 +1,29 @@
+rule all:
+    input:
+        expand("df.{i}.txt", i=range(2))
+
+
+rule a:
+    output:
+        "test.{i}.txt"
+    shell:
+        "for i in {{0..2}}; do echo {wildcards.i} >> {output}; done"
+
+
+rule b:
+    input:
+        "test.{i}.txt"
+    output:
+        "test.{i}.out"
+    shell:
+        "grep {wildcards.i} < {input} > {output}"
+
+rule c:
+    input:
+        "test.{i}.out"
+    output:
+        "df.{i}.txt"
+    run:
+        import pandas as pd
+        df = pd.DataFrame({'A':[1,2,3], 'B':[1,2,3]})
+        df.to_csv(str(output))
